@@ -3,6 +3,7 @@ from utils.communication import exec_on_rem_workspace, send_to_server, exit_if_e
 import subprocess
 import names
 import os
+import time
 
 def prepare_file(cmds: List[str], jobname: str, partition: str, qos: str,
  gpus: int, time: int, logfile: str, node: Optional[str]) -> str:
@@ -13,7 +14,7 @@ def prepare_file(cmds: List[str], jobname: str, partition: str, qos: str,
   gres_sbatch =f'#SBATCH --gres=gpu:{gpus}'
   time_sbatch = f'#SBATCH --time={time}'
   output_sbatch = f'#SBATCH --output={logfile}'
-  node_sbatch = f'#SBATCH --nodelist={node}'
+  node_sbatch = f'#SBATCH --nodelist={node}' if node else ''
 
   cmd = '\n'.join(cmds)
 
@@ -26,7 +27,6 @@ def prepare_file(cmds: List[str], jobname: str, partition: str, qos: str,
 {time_sbatch}
 {output_sbatch}
 {node_sbatch}
-{job_sbatch}
 # rm -rf trax venv
 
 {cmd}
@@ -43,7 +43,7 @@ echo "Task done"
       cmd=cmd
     )
 
-def prepare_workspace(rem_workspace: str, rem_host: str, job_folder: str, job_content: str):
+def prepare_workspace(rem_workspace: str, rem_host: str, job_folder: str, job_content: str, job_file: str):
     # create workspace if not exists
     exit_if_error(subprocess.run([
         'ssh', rem_host, f'mkdir -p {rem_workspace}'
@@ -55,7 +55,6 @@ def prepare_workspace(rem_workspace: str, rem_host: str, job_folder: str, job_co
     ])
 
     # prepare job
-    job_file = 'jobtask.txt'
     with open(job_file, 'w') as output:
         output.write(job_content)
     
@@ -70,11 +69,18 @@ def submit_job(job_file: str, rem_host: str, rem_workspace: str):
                           cmds=[cmd])
 
 
-def create_sbatch_job(rem_host: str, rem_workspace: str, cmds: List[str],
+def create_sbatch_job( cmds: List[str], rem_host: str, rem_workspace: str,
  jobname: str, partition: str, qos: str,
- gpus: int, time: int, logfile: str, node: Optional[str]):
-  job_content = prepare_file(cmds, jobname, partition, qos, gpus, time, logfile, node)
+ gpus: int, max_time: str, node: Optional[str] = None):
+
+  logfile = 'job_output.txt'
+  job_content = prepare_file(cmds, jobname, partition, qos, gpus, max_time, logfile, node)
   date = time.strftime("%Y%m%d_%H%M%S")
   job_folder = date+names.get_first_name()
-  prepare_workspace(rem_workspace, rem_host, job_folder, job_content)
+  job_file = 'job_task.txt'
+  prepare_workspace(rem_workspace, rem_host, job_folder, job_content, job_file)
+  submit_job(job_file, rem_host, os.path.join(rem_workspace, job_folder))
+
   print(f'Output will be saved in\n{rem_host}:~/{rem_workspace}/{job_folder}')
+
+
