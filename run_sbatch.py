@@ -7,7 +7,6 @@ import time
 
 def prepare_file(cmds: List[str], jobname: str, partition: str, qos: str,
  gpus: int, time: int, logfile: str, node: Optional[str]) -> str:
-  
   jobname_sbatch = f'#SBATCH --job-name={jobname}'
   partition_sbatch = f'#SBATCH --partition={partition}'
   qos_sbatch = f'#SBATCH --qos={qos}'
@@ -76,7 +75,7 @@ def create_sbatch_job( cmds: List[str], rem_host: str, rem_workspace: str,
   logfile = 'job_output.txt'
   job_content = prepare_file(cmds, jobname, partition, qos, gpus, max_time, logfile, node)
   date = time.strftime("%Y%m%d_%H%M%S")
-  job_folder = date+names.get_first_name()
+  job_folder = date+jobname
   job_file = 'job_task.txt'
   prepare_workspace(rem_workspace, rem_host, job_folder, job_content, job_file)
   submit_job(job_file, rem_host, os.path.join(rem_workspace, job_folder))
