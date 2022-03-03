@@ -35,6 +35,7 @@ def sync_clusters(src_cluster, target_cluster, config):
 
     except Exception as e:
         print('Something failed...', str(e))
+    finally:   
         shutil.rmtree(workspace)
 
 if __name__ == '__main__':
