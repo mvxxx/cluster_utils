@@ -1,4 +1,8 @@
 {
+    "ignore": ["__pycache__", "venv"],
+    "local": {
+        "tree_root": "/home/myhomeuser/workspace"
+    },
     "clusters": {
         "entropy": {
             "username@remote": "username@remote1.com",
