@@ -70,12 +70,13 @@ def submit_job(job_file: str, rem_host: str, rem_workspace: str):
 
 def create_sbatch_job( cmds: List[str], rem_host: str, rem_workspace: str,
  jobname: str, partition: str, qos: str,
- gpus: int, max_time: str, node: Optional[str] = None):
+ gpus: int, max_time: str, node: Optional[str] = None, job_folder = None):
 
   logfile = 'job_output.txt'
   job_content = prepare_file(cmds, jobname, partition, qos, gpus, max_time, logfile, node)
   date = time.strftime("%Y%m%d_%H%M%S")
-  job_folder = date+jobname
+  if job_folder is None:
+    job_folder = date+jobname
   job_file = 'job_task.txt'
   prepare_workspace(rem_workspace, rem_host, job_folder, job_content, job_file)
   submit_job(job_file, rem_host, os.path.join(rem_workspace, job_folder))
